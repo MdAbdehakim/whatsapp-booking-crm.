@@ -6,10 +6,11 @@ import {
   MessageSquare,
   Calendar,
   LayoutDashboard,
-  Sparkles,
   Stethoscope,
   Settings,
   PlusCircle,
+  Users,
+  QrCode,
 } from "lucide-react";
 
 export function Navbar() {
@@ -41,7 +42,7 @@ export function Navbar() {
         </Link>
 
         {/* Navigation Links */}
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           <Link
             href="/"
             className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
@@ -77,7 +78,19 @@ export function Navbar() {
             }`}
           >
             <LayoutDashboard className="h-3.5 w-3.5" />
-            CRM Agenda
+            Agenda CRM
+          </Link>
+
+          <Link
+            href="/dashboard/patients"
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+              pathname === "/dashboard/patients"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Fiches Patients
           </Link>
 
           <Link
@@ -89,7 +102,19 @@ export function Navbar() {
             }`}
           >
             <Stethoscope className="h-3.5 w-3.5" />
-            Services & Tarifs
+            Services
+          </Link>
+
+          <Link
+            href="/dashboard/qr-code"
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+              pathname === "/dashboard/qr-code"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <QrCode className="h-3.5 w-3.5" />
+            Affiche QR
           </Link>
 
           <Link

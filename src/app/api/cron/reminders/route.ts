@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 import { addDays, startOfDay, endOfDay } from "date-fns";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Automated Cron Job for Sending WhatsApp Reminders (T-24h)
  * Configured in vercel.json to run every morning at 08:00 AM.

@@ -11,6 +11,9 @@ import {
   Loader2,
   ArrowLeft,
   Save,
+  Palette,
+  QrCode,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -27,6 +30,17 @@ export default function ClinicSettingsPage() {
   const [address, setAddress] = useState("");
   const [googleMapsUrl, setGoogleMapsUrl] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [selectedColor, setSelectedColor] = useState("#128C7E");
+
+  const brandColors = [
+    { name: "Émeraude WhatsApp", hex: "#128C7E", class: "bg-[#128C7E]" },
+    { name: "Bleu Océan", hex: "#0284c7", class: "bg-[#0284c7]" },
+    { name: "Violet Royal", hex: "#7c3aed", class: "bg-[#7c3aed]" },
+    { name: "Cyan Médical", hex: "#0891b2", class: "bg-[#0891b2]" },
+    { name: "Rose Esthétique", hex: "#e11d48", class: "bg-[#e11d48]" },
+    { name: "Ardoise Sombre", hex: "#0f172a", class: "bg-[#0f172a]" },
+  ];
 
   async function loadSettings() {
     try {
@@ -41,6 +55,7 @@ export default function ClinicSettingsPage() {
         setAddress(data.address || "");
         setGoogleMapsUrl(data.googleMapsUrl || "");
         setWelcomeMessage(data.welcomeMessage || "");
+        setLogoUrl(data.logoUrl || "");
       }
     } catch (err) {
       console.error(err);
@@ -56,7 +71,6 @@ export default function ClinicSettingsPage() {
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    // Simulate save
     setTimeout(() => {
       setSaving(false);
       setSavedSuccess(true);
@@ -71,20 +85,30 @@ export default function ClinicSettingsPage() {
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl space-y-6">
           {/* Header */}
-          <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 mb-2"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Retour au Dashboard
+              </Link>
+              <h1 className="text-2xl font-extrabold text-slate-900">
+                Paramètres du Cabinet & Personnalisation
+              </h1>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Gérez l'identité visuelle, les informations de contact et les messages WhatsApp.
+              </p>
+            </div>
+
             <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 mb-2"
+              href="/dashboard/qr-code"
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Retour au Dashboard
+              <QrCode className="h-4 w-4" />
+              Générer Affiche QR Code
             </Link>
-            <h1 className="text-2xl font-extrabold text-slate-900">
-              Paramètres du Cabinet & Automatisations
-            </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Gérez les informations publiques, les créneaux et les templates WhatsApp.
-            </p>
           </div>
 
           {loading ? (
@@ -158,7 +182,57 @@ export default function ClinicSettingsPage() {
                 </div>
               </div>
 
-              {/* Card 2: WhatsApp Messages Template */}
+              {/* Card 2: Custom Branding & Logo */}
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-4">
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <Palette className="h-5 w-5 text-emerald-600" />
+                  Identité Visuelle & Thème (Branding)
+                </h2>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1 text-xs">
+                    Lien du Logo du Cabinet (URL)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://moncabinet.ma/logo.png"
+                    value={logoUrl}
+                    onChange={(e) => setLogoUrl(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:border-emerald-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-2 text-xs">
+                    Couleur Thème Principale :
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {brandColors.map((color) => {
+                      const isSelected = selectedColor === color.hex;
+                      return (
+                        <button
+                          key={color.hex}
+                          type="button"
+                          onClick={() => setSelectedColor(color.hex)}
+                          className={`flex items-center gap-2.5 p-3 rounded-2xl border-2 text-left transition text-xs font-semibold ${
+                            isSelected
+                              ? "border-emerald-600 bg-emerald-50/60 shadow-sm"
+                              : "border-slate-200 hover:border-slate-300"
+                          }`}
+                        >
+                          <span
+                            className="h-5 w-5 rounded-full shadow-inner shrink-0"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <span className="truncate text-slate-800">{color.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: WhatsApp Messages Template */}
               <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm space-y-4">
                 <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-emerald-600" />
