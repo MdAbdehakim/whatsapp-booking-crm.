@@ -1,6 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const clinics = await prisma.clinic.findMany({
+      include: {
+        services: true,
+        _count: {
+          select: {
+            appointments: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(clinics);
+  } catch (error: any) {
+    console.error("Error fetching clinics:", error);
+    return NextResponse.json(
+      { error: "Erreur lors de la récupération des cabinets." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -22,10 +22,24 @@ import {
   MapPin,
   Loader2,
   Trash2,
+  Printer,
+  Download,
+  Building2,
+  ChevronDown,
+  ExternalLink,
 } from "lucide-react";
-import { format, parseISO, isToday, isTomorrow } from "date-fns";
+import { format, parseISO, isToday, isTomorrow, addDays, startOfWeek, endOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { formatFrenchDate, formatFrenchTime, formatPrice } from "@/lib/utils";
+import Link from "next/link";
+
+interface ClinicItem {
+  id: string;
+  name: string;
+  slug: string;
+  doctorName: string;
+  phone: string;
+}
 
 interface Appointment {
   id: string;
@@ -64,6 +78,10 @@ interface Appointment {
 }
 
 export default function DashboardPage() {
+  const [clinics, setClinics] = useState<ClinicItem[]>([]);
+  const [selectedClinicSlug, setSelectedClinicSlug] = useState<string>("dr-amine-bennani");
+  const [selectedClinic, setSelectedClinic] = useState<ClinicItem | null>(null);
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
@@ -71,6 +89,9 @@ export default function DashboardPage() {
     format(new Date(), "yyyy-MM-dd")
   );
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Toast notification state
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Manual Appointment Modal State
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -91,17 +112,39 @@ export default function DashboardPage() {
   const [simulating, setSimulating] = useState(false);
   const [simResult, setSimResult] = useState<any>(null);
 
-  // Load Appointments
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Load All Clinics
+  async function loadClinics() {
+    try {
+      const res = await fetch("/api/clinics");
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setClinics(data);
+        const current = data.find((c) => c.slug === selectedClinicSlug) || data[0];
+        setSelectedClinic(current);
+        setSelectedClinicSlug(current.slug);
+      }
+    } catch (err) {
+      console.error("Error loading clinics:", err);
+    }
+  }
+
+  // Load Appointments for the selected Clinic & Date
   async function fetchAppointments() {
     try {
       setLoading(true);
+      const clinicParam = selectedClinic?.id ? `&clinicId=${selectedClinic.id}` : "";
       const res = await fetch(
         `/api/appointments?date=${selectedDate}${
           filterStatus !== "ALL" ? `&status=${filterStatus}` : ""
-        }`
+        }${clinicParam}`
       );
       const data = await res.json();
-      setAppointments(data);
+      setAppointments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching appointments:", err);
     } finally {
@@ -111,8 +154,9 @@ export default function DashboardPage() {
 
   // Load Services for Manual Booking
   async function fetchClinicServices() {
+    if (!selectedClinicSlug) return;
     try {
-      const res = await fetch("/api/clinics/dr-amine-bennani");
+      const res = await fetch(`/api/clinics/${selectedClinicSlug}`);
       const data = await res.json();
       if (data.services) {
         setServicesList(data.services);
@@ -126,9 +170,13 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
+    loadClinics();
+  }, []);
+
+  useEffect(() => {
     fetchAppointments();
     fetchClinicServices();
-  }, [selectedDate, filterStatus]);
+  }, [selectedDate, filterStatus, selectedClinicSlug, selectedClinic]);
 
   // Update Status Action
   const handleUpdateStatus = async (id: string, newStatus: string) => {
@@ -139,6 +187,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       if (res.ok) {
+        showToast(`Statut mis à jour : ${newStatus}`);
         fetchAppointments();
       }
     } catch (err) {
@@ -156,7 +205,7 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        alert("✅ Rappel WhatsApp envoyé avec succès au patient !");
+        showToast("✅ Rappel WhatsApp envoyé avec succès au patient !");
         fetchAppointments();
       }
     } catch (err) {
@@ -173,7 +222,7 @@ export default function DashboardPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clinicId: servicesList[0]?.clinicId,
+          clinicId: selectedClinic?.id || servicesList[0]?.clinicId,
           serviceId: manualForm.serviceId,
           startTime: manualForm.startTime,
           fullName: manualForm.fullName,
@@ -183,6 +232,7 @@ export default function DashboardPage() {
       });
       if (res.ok) {
         setIsNewModalOpen(false);
+        showToast("🎉 Nouveau rendez-vous enregistré et confirmé par WhatsApp !");
         setManualForm({
           fullName: "",
           phoneNumber: "",
@@ -218,12 +268,36 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       setSimResult(data);
+      showToast(`Réponse WhatsApp reçue : ${simMessage} ➡️ Statut : ${data.action}`);
       fetchAppointments();
     } catch (err) {
       console.error(err);
     } finally {
       setSimulating(false);
     }
+  };
+
+  // Export to CSV
+  const handleExportCSV = () => {
+    if (appointments.length === 0) return;
+    const headers = ["Heure", "Patient", "Telephone", "Service", "Prix (DH)", "Statut", "Notes"];
+    const rows = appointments.map((a) => [
+      formatFrenchTime(a.startTime),
+      `"${a.patient.fullName}"`,
+      `"${a.patient.phoneNumber}"`,
+      `"${a.service.name}"`,
+      a.service.price || 0,
+      a.status,
+      `"${a.notes || ""}"`,
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `agenda-${selectedClinicSlug}-${selectedDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
   };
 
   // KPIs Calculations
@@ -245,41 +319,102 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100">
-      <Navbar />
+    <div className="flex min-h-screen flex-col bg-slate-100 print:bg-white">
+      {/* Toast popup */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3.5 text-xs font-bold text-white shadow-2xl animate-bounce">
+          <Sparkles className="h-4 w-4 text-emerald-400" />
+          {toastMessage}
+        </div>
+      )}
 
-      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="print:hidden">
+        <Navbar />
+      </div>
+
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 print:p-0">
         <div className="mx-auto max-w-7xl space-y-6">
-          {/* Header & Controls */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Top Bar with Clinic Switcher & Quick Actions */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 print:hidden">
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-2xl font-extrabold text-slate-900">
                   Agenda & CRM Médical
                 </h1>
-                <span className="rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-bold text-emerald-800">
-                  Cabinet Dr. Amine Bennani
-                </span>
+
+                {/* Multi-Clinic Dropdown Switcher */}
+                {clinics.length > 0 && (
+                  <div className="relative inline-block">
+                    <select
+                      value={selectedClinicSlug}
+                      onChange={(e) => {
+                        const targetSlug = e.target.value;
+                        setSelectedClinicSlug(targetSlug);
+                        const c = clinics.find((item) => item.slug === targetSlug);
+                        if (c) setSelectedClinic(c);
+                      }}
+                      className="appearance-none rounded-xl border border-emerald-600/30 bg-emerald-50 py-1.5 pl-8 pr-8 text-xs font-extrabold text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-600/30 cursor-pointer shadow-sm"
+                    >
+                      {clinics.map((c) => (
+                        <option key={c.id} value={c.slug}>
+                          🏥 {c.name} ({c.doctorName})
+                        </option>
+                      ))}
+                    </select>
+                    <Building2 className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-700" />
+                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-700" />
+                  </div>
+                )}
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                Gestion des flux patients, confirmations WhatsApp et suivi des présences en temps réel.
+
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                <span>Gestion des flux patients, confirmations WhatsApp et suivi des présences en temps réel.</span>
+                {selectedClinic && (
+                  <Link
+                    href={`/${selectedClinic.slug}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-1 font-bold text-emerald-700 hover:underline"
+                  >
+                    Voir page patient <ExternalLink className="h-3 w-3" />
+                  </Link>
+                )}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              {/* Print Today's Sheet */}
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                title="Imprimer l'agenda du jour pour le médecin"
+              >
+                <Printer className="h-4 w-4" />
+                Imprimer l'Agenda
+              </button>
+
+              {/* Export CSV */}
+              <button
+                onClick={handleExportCSV}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                title="Télécharger les données en format Excel / CSV"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </button>
+
               {/* WhatsApp Inbound Simulator Button */}
               <button
                 onClick={() => setIsSimulatorOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600/30 bg-emerald-50 px-3.5 py-2.5 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600/30 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100"
               >
                 <Sparkles className="h-4 w-4 text-emerald-600" />
-                Simulateur Réponse WhatsApp
+                Simulateur WhatsApp
               </button>
 
               {/* Add Manual Appointment Button */}
               <button
                 onClick={() => setIsNewModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-slate-800"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-md transition hover:bg-slate-800"
               >
                 <Plus className="h-4 w-4" />
                 Nouveau RDV Manuel
@@ -288,7 +423,7 @@ export default function DashboardPage() {
           </div>
 
           {/* KPI Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 print:hidden">
             {/* KPI 1 */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <span className="text-xs font-medium text-slate-500">Rendez-vous du jour</span>
@@ -339,35 +474,45 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            {/* Date Pickers */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Quick Date Filters & Search Bar */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm print:hidden">
+            {/* Date Quick Pickers */}
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
+                className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-600/20 shadow-sm"
               />
               <button
                 onClick={() => setSelectedDate(format(new Date(), "yyyy-MM-dd"))}
                 className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
                   selectedDate === format(new Date(), "yyyy-MM-dd")
-                    ? "bg-emerald-600 text-white"
+                    ? "bg-emerald-600 text-white shadow-sm"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 Aujourd'hui
               </button>
+              <button
+                onClick={() => setSelectedDate(format(addDays(new Date(), 1), "yyyy-MM-dd"))}
+                className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
+                  selectedDate === format(addDays(new Date(), 1), "yyyy-MM-dd")
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                Demain
+              </button>
             </div>
 
             {/* Search and Status filter */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 w-full md:w-auto">
               <div className="relative flex-1 sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Rechercher patient, tél..."
+                  placeholder="Rechercher patient, tél, soin..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 pl-8 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
@@ -397,14 +542,19 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Main Appointments Table */}
-          <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          {/* Main Appointments Table (With Clean Print Styling) */}
+          <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm print:border-none print:shadow-none">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-900">
-                Liste des Rendez-vous ({filteredAppointments.length})
-              </h2>
-              <span className="text-xs text-slate-500">
-                {formatFrenchDate(selectedDate)}
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">
+                  Planning des Rendez-vous ({filteredAppointments.length})
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {selectedClinic?.name || "Cabinet"} • {formatFrenchDate(selectedDate)}
+                </p>
+              </div>
+              <span className="hidden print:inline-block text-xs font-bold text-slate-400">
+                Imprimé via MediAppoint WA
               </span>
             </div>
 
@@ -429,9 +579,9 @@ export default function DashboardPage() {
                       <th className="py-3 px-4">Heure</th>
                       <th className="py-3 px-4">Patient</th>
                       <th className="py-3 px-4">Soin & Tarif</th>
-                      <th className="py-3 px-4">Statut WA / RDV</th>
-                      <th className="py-3 px-4">Historique WA</th>
-                      <th className="py-3 px-4 text-right">Actions Secrétaire</th>
+                      <th className="py-3 px-4">Statut WA</th>
+                      <th className="py-3 px-4 print:hidden">Dernier Message WA</th>
+                      <th className="py-3 px-4 text-right print:hidden">Actions Secrétaire</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
@@ -510,7 +660,7 @@ export default function DashboardPage() {
                           </td>
 
                           {/* WhatsApp Log preview */}
-                          <td className="py-3.5 px-4">
+                          <td className="py-3.5 px-4 print:hidden">
                             {latestLog ? (
                               <div className="text-[11px] text-slate-600 max-w-xs">
                                 <span className="font-semibold text-emerald-800">
@@ -528,7 +678,7 @@ export default function DashboardPage() {
                           </td>
 
                           {/* Action Buttons */}
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-3.5 px-4 text-right print:hidden">
                             <div className="inline-flex items-center gap-1.5">
                               {/* Mark as Present / Checked-in */}
                               {appt.status !== "COMPLETED" && appt.status !== "CANCELLED" && (
@@ -695,7 +845,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* MODAL: WHATSAPP INTERACTIVE SIMULATOR (Test Webhooks) */}
+      {/* MODAL: WHATSAPP INTERACTIVE SIMULATOR */}
       {isSimulatorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
@@ -788,7 +938,7 @@ export default function DashboardPage() {
 
               {simResult && (
                 <div className="rounded-2xl bg-[#EFEAE2] p-3.5 border border-[#d1d7db] text-xs">
-                  <p className="font-bold text-emerald-800 text-[11px] mb-1">
+                  <p className="font-bold text-emerald-900 text-[11px] mb-1">
                     Réponse automatique du Webhook :
                   </p>
                   <div className="rounded-xl bg-white p-3 shadow-sm border-l-4 border-emerald-600">
