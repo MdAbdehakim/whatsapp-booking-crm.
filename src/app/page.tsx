@@ -196,10 +196,10 @@ export default function HomePage() {
               </div>
 
               <Link
-                href="/dr-amine-bennani"
+                href="/onboarding"
                 className="mt-8 block w-full rounded-xl border border-slate-300 bg-white py-3 text-center text-sm font-bold text-slate-800 transition hover:bg-slate-50"
               >
-                Tester la démo
+                Commencer l'essai gratuit
               </Link>
             </div>
 
@@ -257,7 +257,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© 2026 MediAppoint WA. Conçu pour les cabinets médicaux d'élite et les professionnels libéraux.</p>
           <div className="flex gap-4">
-            <Link href="/dr-amine-bennani" className="hover:text-emerald-600">Page Patient</Link>
+            <Link href="/onboarding" className="hover:text-emerald-600">Créer un Cabinet</Link>
             <Link href="/dashboard" className="hover:text-emerald-600">Dashboard CRM</Link>
           </div>
         </div>

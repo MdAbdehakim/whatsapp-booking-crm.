@@ -55,7 +55,7 @@ export function Navbar() {
           </Link>
 
           <Link
-            href="/dr-amine-bennani"
+            href="/onboarding"
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
               isBookingPage
                 ? "bg-emerald-50 text-emerald-700"
@@ -64,9 +64,6 @@ export function Navbar() {
           >
             <Calendar className="h-3.5 w-3.5 text-emerald-600" />
             Page Patient
-            <span className="rounded bg-emerald-600/10 px-1 py-0.5 text-[9px] font-bold text-emerald-700">
-              Live
-            </span>
           </Link>
 
           <Link
