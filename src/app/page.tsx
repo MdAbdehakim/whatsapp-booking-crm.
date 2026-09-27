@@ -171,7 +171,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-slate-900">390 DH</span>
+                  <span className="text-4xl font-extrabold text-slate-900">290 DH</span>
                   <span className="text-sm font-medium text-slate-500">/ mois</span>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">Idéal pour les médecins indépendants et dentistes en cabinet solo.</p>
@@ -217,7 +217,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold text-slate-900">790 DH</span>
+                  <span className="text-4xl font-extrabold text-slate-900">590 DH</span>
                   <span className="text-sm font-medium text-slate-500">/ mois</span>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">Pour les cliniques esthétiques, cabinets de groupe et centres médicaux.</p>
