@@ -31,12 +31,6 @@ export function Navbar() {
           <div className="flex flex-col">
             <span className="text-lg font-bold tracking-tight text-slate-900">
               Medi<span className="text-emerald-600">Appoint</span>
-              <span className="ml-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-                WA CRM
-              </span>
-            </span>
-            <span className="text-[10px] font-medium text-slate-500">
-              WhatsApp Booking Engine
             </span>
           </div>
         </Link>
