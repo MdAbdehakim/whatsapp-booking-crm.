@@ -20,7 +20,7 @@ export async function GET() {
   } catch (error: any) {
     console.error("Error fetching clinics:", error);
     return NextResponse.json(
-      { error: "Erreur lors de la récupération des cabinets." },
+      { error: "Erreur lors de la récupération des cabinets.", details: error.message, code: error.code },
       { status: 500 }
     );
   }
