@@ -27,12 +27,12 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-emerald-200/40 to-teal-100/40 blur-3xl" />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
+          <div className="mx-auto max-w-3xl text-center">
             {/* Left Column: Value Prop */}
-            <div className="text-center lg:col-span-7 lg:text-left">
+            <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-50/80 px-3.5 py-1.5 text-xs font-semibold text-emerald-800 shadow-sm">
                 <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
-                <span>SaaS Dédié aux Cabinets Médicaux & Professions Libérales</span>
+                <span>SaaS Dédié aux Cabinets Médicaux &amp; Professions Libérales</span>
               </div>
 
               <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
@@ -47,13 +47,13 @@ export default function HomePage() {
               </p>
 
               {/* CTAs */}
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
-                  href="/dr-amine-bennani"
+                  href="/onboarding"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-600/30 transition hover:from-emerald-700 hover:to-teal-700 hover:shadow-xl hover:shadow-emerald-600/40 active:scale-98"
                 >
                   <Calendar className="h-5 w-5" />
-                  Tester la Démo Patient en direct
+                  Créer la Page de votre Cabinet
                   <ArrowRight className="h-4 w-4" />
                 </Link>
 
@@ -66,7 +66,7 @@ export default function HomePage() {
               </div>
 
               {/* Social Proof metrics */}
-              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-slate-200/80 pt-6 text-left">
+              <div className="mt-10 grid grid-cols-3 gap-4 border-t border-slate-200/80 pt-6">
                 <div>
                   <p className="text-2xl font-bold text-slate-900">-75%</p>
                   <p className="text-xs text-slate-500">Taux de No-Show (Absences)</p>
@@ -79,70 +79,6 @@ export default function HomePage() {
                   <p className="text-2xl font-bold text-slate-900">&lt; 2 min</p>
                   <p className="text-xs text-slate-500">Temps moyen de prise de RDV</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Right Column: Live Interactive Mockup Card */}
-            <div className="lg:col-span-5">
-              <div className="relative mx-auto max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-200/60">
-                {/* Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center font-bold text-emerald-800">
-                      DA
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">Dr. Amine Bennani</h4>
-                      <p className="text-xs text-slate-500">Chirurgien-Dentiste • Casablanca</p>
-                    </div>
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">
-                    En Ligne
-                  </span>
-                </div>
-
-                {/* Simulated WhatsApp Notification Bubble */}
-                <div className="mt-5 space-y-4">
-                  <div className="rounded-2xl bg-emerald-50/90 p-4 border border-emerald-100 text-xs text-slate-800 shadow-sm">
-                    <div className="flex items-center gap-1.5 font-bold text-emerald-800 mb-1">
-                      <MessageSquare className="h-4 w-4 text-emerald-600" />
-                      WhatsApp Notification (Instantanée)
-                    </div>
-                    <p className="leading-relaxed">
-                      👋 <strong>Bonjour Youssef !</strong> Votre rendez-vous pour <em>Détartrage & Polissage</em> le <strong>Lundi à 10:30</strong> chez Dr. Bennani est confirmé.
-                    </p>
-                    <div className="mt-3 flex gap-2">
-                      <span className="inline-block rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white">
-                        ✅ Confirmé
-                      </span>
-                      <span className="inline-block rounded-lg bg-white border border-slate-200 px-2.5 py-1 text-[11px] font-medium text-slate-700">
-                        📍 Ouvrir Maps
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Calendar slot preview */}
-                  <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200/70">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
-                      <span>Créneaux Disponibles</span>
-                      <span className="text-emerald-600">Aujourd'hui</span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
-                      <span className="rounded-lg bg-emerald-600 text-white py-2 shadow-sm">10:00</span>
-                      <span className="rounded-lg bg-white border border-slate-200 text-slate-700 py-2 hover:border-emerald-500 cursor-pointer">11:30</span>
-                      <span className="rounded-lg bg-white border border-slate-200 text-slate-700 py-2 hover:border-emerald-500 cursor-pointer">15:00</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Direct CTA */}
-                <Link
-                  href="/dr-amine-bennani"
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-center text-xs font-bold text-white transition hover:bg-slate-800"
-                >
-                  Tester la réservation comme un patient
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
               </div>
             </div>
           </div>
