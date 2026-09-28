@@ -100,9 +100,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert or create Patient
+    // Find or create Patient (match by phone AND name so family members sharing a phone keep separate records)
     let patient = await prisma.patient.findFirst({
-      where: { phoneNumber: sanitizedPhone },
+      where: {
+        phoneNumber: sanitizedPhone,
+        fullName: { equals: fullName, mode: "insensitive" },
+      },
     });
 
     if (!patient) {
@@ -114,14 +117,10 @@ export async function POST(request: NextRequest) {
           notes: notes || null,
         },
       });
-    } else {
-      // Update patient name if changed
+    } else if (email && !patient.email) {
       patient = await prisma.patient.update({
         where: { id: patient.id },
-        data: {
-          fullName,
-          email: email || patient.email,
-        },
+        data: { email },
       });
     }
 

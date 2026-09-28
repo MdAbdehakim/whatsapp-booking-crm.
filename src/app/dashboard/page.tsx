@@ -195,6 +195,22 @@ export default function DashboardPage() {
     }
   };
 
+  // Delete Appointment Permanently Action
+  const handleDeleteAppointment = async (id: string) => {
+    if (!confirm("Voulez-vous supprimer définitivement ce rendez-vous ?")) return;
+    try {
+      const res = await fetch(`/api/appointments/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        showToast("🗑️ Rendez-vous supprimé définitivement.");
+        fetchAppointments();
+      }
+    } catch (err) {
+      console.error("Error deleting appointment:", err);
+    }
+  };
+
   // Trigger WhatsApp Reminder Action
   const handleSendReminder = async (appointmentId: string) => {
     try {
@@ -717,12 +733,21 @@ export default function DashboardPage() {
                               {appt.status !== "CANCELLED" && (
                                 <button
                                   onClick={() => handleUpdateStatus(appt.id, "CANCELLED")}
-                                  className="rounded-lg bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
+                                  className="rounded-lg bg-slate-100 p-1.5 text-slate-600 hover:bg-slate-200"
                                   title="Annuler le rendez-vous"
                                 >
                                   <XCircle className="h-4 w-4" />
                                 </button>
                               )}
+
+                              {/* Permanently Delete Booking */}
+                              <button
+                                onClick={() => handleDeleteAppointment(appt.id)}
+                                className="rounded-lg bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
+                                title="Supprimer définitivement"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
