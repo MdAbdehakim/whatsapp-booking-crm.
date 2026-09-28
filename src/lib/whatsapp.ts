@@ -52,7 +52,7 @@ export async function sendWhatsAppNotification({
   if (token && phoneNumberId && token.length > 10 && phoneNumberId.length > 5) {
     try {
       const response = await axios.post(
-        `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`,
+        `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
         {
           messaging_product: "whatsapp",
           recipient_type: "individual",
